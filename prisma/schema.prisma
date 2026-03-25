@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  workoutLogs  WorkoutLog[]
+}
+
+model Exercise {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  workoutLogs WorkoutLog[]
+}
+
+model WorkoutLog {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  exerciseId  Int
+  weight      Float
+  sets        Int
+  reps        Int
+  performedAt DateTime
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([exerciseId])
+  @@index([userId, exerciseId])
+}
