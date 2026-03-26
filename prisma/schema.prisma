@@ -28,7 +28,7 @@ model WorkoutLog {
   weight      Float
   sets        Int
   reps        Int
-  performedAt DateTime
+  performedAt DateTime  @default(now())
   createdAt   DateTime  @default(now())
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -37,4 +37,5 @@ model WorkoutLog {
   @@index([userId])
   @@index([exerciseId])
   @@index([userId, exerciseId])
+  @@index([userId, performedAt])
 }
