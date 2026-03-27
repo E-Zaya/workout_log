@@ -22,22 +22,6 @@ export type CalendarStats = {
   activeDates: string[];
 };
 
-export type WorkoutLogItem = {
-  id: number;
-  weight: number;
-  reps: number;
-  sets: number;
-  performedAt: Date;
-  exercise: {
-    name: string;
-  };
-};
-
-export type BestRecordItem = {
-  exerciseName: string;
-  weight: number;
-};
-
 export type CreateWorkoutLogInput = {
   userId: number;
   exerciseId: number;

@@ -2,15 +2,32 @@
 
 import { useState, useTransition } from "react";
 import { createExercise, deleteExercise } from "@/actions/exercise";
-
-type Exercise = {
-  id: number;
-  name: string;
-};
+import type { ExerciseOption } from "@/types/workout";
 
 type Props = {
-  exercises: Exercise[];
+  exercises: ExerciseOption[];
 };
+
+function TrashIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="trash-icon"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
+}
 
 export default function ManageExercises({ exercises }: Props) {
   const [name, setName] = useState("");
@@ -29,7 +46,7 @@ export default function ManageExercises({ exercises }: Props) {
         await createExercise(formData);
         setName("");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to add exercise");
+        setError(err instanceof Error ? err.message : "Failed to add exercise.");
       }
     });
   };
@@ -44,67 +61,58 @@ export default function ManageExercises({ exercises }: Props) {
       try {
         await deleteExercise(formData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to delete exercise");
+        setError(
+          err instanceof Error ? err.message : "Failed to delete exercise.",
+        );
       }
     });
   };
 
   return (
-    <div className="space-y-5 rounded-2xl border border-white/10 bg-white/5 p-5">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-white">
-          Manage exercises
-        </h2>
-        <p className="text-sm text-gray-300">
-          Add your own training exercise or remove unused ones.
-        </p>
+    <section className="panel-card">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Exercise library</p>
+          <h2 className="section-title">Manage Exercises</h2>
+        </div>
       </div>
 
-      <form onSubmit={handleAddExercise} className="flex flex-col gap-3 sm:flex-row">
+      <form className="exercise-create-row" onSubmit={handleAddExercise}>
         <input
           type="text"
-          placeholder="e.g. Bench Press"
+          placeholder="Add exercise"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="input-base flex-1"
+          className="input-base"
           required
         />
-        <button
-          type="submit"
-          disabled={isPending}
-          className="primary-btn whitespace-nowrap"
-        >
-          {isPending ? "Adding..." : "Add exercise"}
+        <button type="submit" className="primary-btn" disabled={isPending}>
+          {isPending ? "Adding..." : "Add"}
         </button>
       </form>
 
-      {error && (
-        <p className="text-sm text-red-400">{error}</p>
-      )}
+      {error ? <p className="error-text">{error}</p> : null}
 
-      <div className="space-y-2">
+      <div className="exercise-list">
         {exercises.length === 0 ? (
-          <p className="text-sm text-gray-400">No exercises yet.</p>
+          <div className="empty-state">No exercises yet.</div>
         ) : (
           exercises.map((exercise) => (
-            <div
-              key={exercise.id}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3"
-            >
-              <span className="text-white">{exercise.name}</span>
-
+            <div key={exercise.id} className="exercise-row">
+              <span className="exercise-name">{exercise.name}</span>
               <button
                 type="button"
                 onClick={() => handleDeleteExercise(exercise.id)}
                 disabled={isPending}
-                className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+                className="danger-icon-btn"
+                aria-label={`Delete ${exercise.name}`}
               >
-                Delete
+                <TrashIcon />
               </button>
             </div>
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 }

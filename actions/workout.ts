@@ -1,22 +1,24 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
-type CreateWorkoutLogInput = {
-  userId: number;
-  exerciseId: number;
-  weight: number;
-  reps: number;
-  sets: number;
-  performedAt?: Date;
-};
+import { prisma } from "@/lib/prisma";
+import type { CreateWorkoutLogInput } from "@/types/workout";
 
 export async function createWorkoutLog(input: CreateWorkoutLogInput) {
   const { userId, exerciseId, weight, reps, sets, performedAt } = input;
 
-  if (!userId || !exerciseId || !weight || !reps || !sets) {
-    throw new Error("Missing required fields.");
+  if (
+    !Number.isFinite(userId) ||
+    !Number.isFinite(exerciseId) ||
+    !Number.isFinite(weight) ||
+    !Number.isFinite(reps) ||
+    !Number.isFinite(sets)
+  ) {
+    throw new Error("Invalid input.");
+  }
+
+  if (weight <= 0 || reps <= 0 || sets <= 0) {
+    throw new Error("Weight, reps, and sets must be greater than 0.");
   }
 
   await prisma.workoutLog.create({

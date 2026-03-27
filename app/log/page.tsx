@@ -1,6 +1,7 @@
 import Link from "next/link";
 import WorkoutLogList from "@/components/log/WorkoutLogList";
 import { getWorkoutLogs } from "@/lib/queries/workout";
+export const dynamic = "force-dynamic";
 
 export default async function LogPage() {
   const userId = 1;

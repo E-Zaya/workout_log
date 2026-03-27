@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BestRecordList from "@/components/best/BestRecordList";
 import { getBestRecords } from "@/lib/queries/workout";
+export const dynamic = "force-dynamic";
 
 export default async function BestPage() {
   const userId = 1;

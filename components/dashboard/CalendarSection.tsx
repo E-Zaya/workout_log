@@ -1,4 +1,3 @@
-import Link from "next/link";
 type CalendarSectionProps = {
   activeDates: string[];
   monthlyActiveDays: number;
@@ -26,37 +25,22 @@ export default function CalendarSection({
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
 
   const daysInMonth = lastDayOfMonth.getDate();
-  const startWeekday = firstDayOfMonth.getDay(); // 0 = Sun
+  const startWeekday = firstDayOfMonth.getDay();
 
   const activeDateSet = new Set(activeDates.map((date) => date.slice(0, 10)));
 
-  const calendarCells: Array<{
-    date: Date | null;
-    isCurrentMonth: boolean;
-  }> = [];
+  const calendarCells: Array<{ date: Date | null }> = [];
 
-  // 月初前の空セル
-  for (let i = 0; i < startWeekday; i++) {
-    calendarCells.push({
-      date: null,
-      isCurrentMonth: false,
-    });
+  for (let i = 0; i < startWeekday; i += 1) {
+    calendarCells.push({ date: null });
   }
 
-  // 当月の日付
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarCells.push({
-      date: new Date(currentYear, currentMonth, day),
-      isCurrentMonth: true,
-    });
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    calendarCells.push({ date: new Date(currentYear, currentMonth, day) });
   }
 
-  // 6週ぶんで見た目を安定させる
   while (calendarCells.length < 42) {
-    calendarCells.push({
-      date: null,
-      isCurrentMonth: false,
-    });
+    calendarCells.push({ date: null });
   }
 
   const weekLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -65,72 +49,61 @@ export default function CalendarSection({
     year: "numeric",
   });
 
-  // ... (前段のロジックは同じ)
+  return (
+    <section className="panel-card">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Attendance</p>
+          <h2 className="section-title">{monthLabel}</h2>
+        </div>
 
-return (
-  <section className="section-card">
-    {/* ヘッダー部分はそのまま */}
-    
-    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black/20">
-      {/* 曜日ラベル */}
-      <div className="grid grid-cols-7 border-b border-white/10 bg-white/5">
+        <div className="calendar-stat-group">
+          <div className="calendar-stat-pill">
+            <span>{monthlyActiveDays}</span>
+            <small>This month</small>
+          </div>
+          <div className="calendar-stat-pill">
+            <span>{totalActiveDays}</span>
+            <small>Total</small>
+          </div>
+        </div>
+      </div>
+
+      <div className="calendar-weekdays">
         {weekLabels.map((label) => (
-          <div key={label} className="py-3 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+          <div key={label} className="calendar-weekday">
             {label}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
-  {calendarCells.map((cell, index) => {
-    if (!cell.date) {
-      return (
-        <div
-          key={`empty-${index}`}
-          className="aspect-square border-b border-r border-white/5"
-        />
-      );
-    }
+      <div className="calendar-grid">
+        {calendarCells.map((cell, index) => {
+          if (!cell.date) {
+            return <div key={`empty-${index}`} className="calendar-cell is-empty" />;
+          }
 
-    const dateKey = formatDateKey(cell.date);
-    const isActive = activeDateSet.has(dateKey);
-    const isToday = dateKey === formatDateKey(today);
+          const dateKey = formatDateKey(cell.date);
+          const isActive = activeDateSet.has(dateKey);
+          const isToday = dateKey === formatDateKey(today);
 
-    return (
-      <Link
-        key={dateKey}
-        href={`/log?date=${dateKey}`}
-        className={[
-          "relative block aspect-square cursor-pointer border-b border-r border-white/5 p-1 transition-colors hover:bg-white/5",
-          isActive ? "bg-red-500/[0.03]" : "",
-        ].join(" ")}
-      >
-        <div className="flex h-full flex-col items-center justify-center gap-1">
-          <span
-            className={[
-              "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all",
-              isToday ? "ring-1 ring-white/50 text-white" : "text-gray-400",
-              isActive ? "font-bold text-red-400" : "",
-            ].join(" ")}
-          >
-            {cell.date.getDate()}
-          </span>
-
-          <div className="h-1.5 w-1.5">
-            {isActive && (
-              <div className="h-full w-full animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-            )}
-          </div>
-        </div>
-
-        {isToday && !isActive && (
-          <div className="absolute right-1 top-1 h-1 w-1 rounded-full bg-white/30" />
-        )}
-      </Link>
-    );
-  })}
-</div>
-    </div>
-  </section>
-);
+          return (
+            <div
+              key={dateKey}
+              className={[
+                "calendar-cell",
+                isToday ? "is-today" : "",
+                isActive ? "is-active" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              <span className="calendar-day-number">{cell.date.getDate()}</span>
+              {isActive ? <span className="calendar-dot" /> : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }

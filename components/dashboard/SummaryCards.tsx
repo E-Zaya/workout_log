@@ -1,28 +1,28 @@
+import type { SummaryMetric } from "@/types/workout";
+
 type Props = {
-  monthlyActiveDays: number;
-  totalActiveDays: number;
-  thisWeekTotal: number;
+  items: SummaryMetric[];
 };
 
-export default function SummaryCards({
-  monthlyActiveDays,
-  totalActiveDays,
-  thisWeekTotal,
-}: Props) {
-  const cards = [
-    { label: "Monthly Active Days", value: monthlyActiveDays },
-    { label: "Total Active Days", value: totalActiveDays },
-    { label: "This Week Total Weight", value: `${thisWeekTotal} kg` },
-  ];
-
+export default function SummaryCards({ items }: Props) {
   return (
-    <section className="grid gap-4 md:grid-cols-3">
-      {cards.map((card) => (
-        <div key={card.label} className="section-card">
-          <p className="stat-label">{card.label}</p>
-          <h2 className="stat-value">{card.value}</h2>
+    <section className="panel-card">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Overview</p>
+          <h2 className="section-title">Key Metrics</h2>
         </div>
-      ))}
+      </div>
+
+      <div className="metric-grid">
+        {items.map((item) => (
+          <article key={item.label} className="metric-card">
+            <p className="metric-label">{item.label}</p>
+            <p className="metric-value">{item.value}</p>
+            {item.helper ? <p className="metric-helper">{item.helper}</p> : null}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
