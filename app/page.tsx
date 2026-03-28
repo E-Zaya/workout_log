@@ -17,7 +17,7 @@ function normalizeExerciseName(name: string) {
 export default async function HomePage() {
   const userId = 1;
 
-  const rawExercises = await prisma.exercise.findMany({
+  const rawExercises: ExerciseOption[] = await prisma.exercise.findMany({
     orderBy: { name: "asc" },
     select: {
       id: true,

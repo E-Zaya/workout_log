@@ -65,9 +65,13 @@ export default function AddTrainingForm({
           className="input-base"
           required
         >
-          <option value="">Select exercise</option>
+          <option value="" style={{ backgroundColor: "#111", color: "#fff" }}>Select exercise</option>
           {exercises.map((exercise) => (
-            <option key={exercise.id} value={exercise.id}>
+            <option
+              key={exercise.id}
+              value={exercise.id}
+              style={{ backgroundColor: "#111111", color: "#ffffff" }}
+            >
               {exercise.name}
             </option>
           ))}

@@ -51,8 +51,8 @@ export default function DashboardClient({
           </div>
 
           <div className="header-center">
-            <p className="eyebrow">Dashboard</p>
-            <p className="header-title">Workout Tracker</p>
+            <p className="eyebrow">シンプル筋トレ記録</p>
+            <p className="header-title">Simple Workout Tracker</p>
           </div>
 
           <div className="header-actions">
@@ -61,7 +61,7 @@ export default function DashboardClient({
               className="primary-btn header-cta"
               onClick={() => setIsModalOpen(true)}
             >
-              + Record Workout
+              + Add today's workout
             </button>
           </div>
         </header>

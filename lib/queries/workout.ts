@@ -1,15 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import type {
-  CalendarStats,
-  WeeklyVolumeItem,
-} from "@/types/workout";
 
 function getStartOfWeek(date: Date) {
   const d = new Date(date);
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day; // Monday start
+
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
+
   return d;
 }
 
@@ -23,18 +21,30 @@ function toDateKey(date: Date) {
   return date.toISOString().split("T")[0];
 }
 
-function normalizeExerciseName(name: string) {
-  const cleaned = name.trim().toLowerCase() === "squad" ? "squat" : name.trim();
+function getDateRangeFromKey(dateKey: string) {
+  const start = new Date(`${dateKey}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
 
-  return cleaned
-    .split(/\s+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
+  return { start, end };
 }
 
-export async function getWorkoutLogs(userId: number) {
-  const logs = await prisma.workoutLog.findMany({
-    where: { userId },
+export async function getWorkoutLogs(userId: number, dateKey?: string) {
+  const performedAtFilter = dateKey
+    ? (() => {
+        const { start, end } = getDateRangeFromKey(dateKey);
+        return {
+          gte: start,
+          lt: end,
+        };
+      })()
+    : undefined;
+
+  return prisma.workoutLog.findMany({
+    where: {
+      userId,
+      ...(performedAtFilter ? { performedAt: performedAtFilter } : {}),
+    },
     include: {
       exercise: true,
     },
@@ -42,14 +52,6 @@ export async function getWorkoutLogs(userId: number) {
       performedAt: "desc",
     },
   });
-
-  return logs.map((log) => ({
-    ...log,
-    exercise: {
-      ...log.exercise,
-      name: normalizeExerciseName(log.exercise.name),
-    },
-  }));
 }
 
 export async function getBestRecords(userId: number) {
@@ -58,17 +60,19 @@ export async function getBestRecords(userId: number) {
     include: {
       exercise: true,
     },
-    orderBy: [{ weight: "desc" }, { performedAt: "desc" }],
+    orderBy: {
+      weight: "desc",
+    },
   });
 
-  const bestMap = new Map<string, { exerciseName: string; weight: number }>();
+  const bestMap = new Map();
 
   for (const log of logs) {
-    const normalizedName = normalizeExerciseName(log.exercise.name);
+    const name = log.exercise.name;
 
-    if (!bestMap.has(normalizedName)) {
-      bestMap.set(normalizedName, {
-        exerciseName: normalizedName,
+    if (!bestMap.has(name)) {
+      bestMap.set(name, {
+        exerciseName: name,
         weight: log.weight,
       });
     }
@@ -77,12 +81,17 @@ export async function getBestRecords(userId: number) {
   return Array.from(bestMap.values());
 }
 
-export async function getWeeklyVolumes(userId: number): Promise<WeeklyVolumeItem[]> {
+export async function getWeeklyVolumes(userId: number) {
   const now = new Date();
   const currentWeekStart = getStartOfWeek(now);
-  const result: WeeklyVolumeItem[] = [];
+  const result: {
+    label: string;
+    total: number;
+    startDate: string;
+    endDate: string;
+  }[] = [];
 
-  for (let i = 4; i >= 0; i -= 1) {
+  for (let i = 0; i <= 5; i++) {
     const start = new Date(currentWeekStart);
     start.setDate(currentWeekStart.getDate() - i * 7);
 
@@ -96,11 +105,6 @@ export async function getWeeklyVolumes(userId: number): Promise<WeeklyVolumeItem
           lt: end,
         },
       },
-      select: {
-        weight: true,
-        reps: true,
-        sets: true,
-      },
     });
 
     const total = logs.reduce((sum, log) => {
@@ -108,10 +112,7 @@ export async function getWeeklyVolumes(userId: number): Promise<WeeklyVolumeItem
     }, 0);
 
     result.push({
-      label:
-        i === 0
-          ? "This week"
-          : `${start.toLocaleString("en-US", { month: "short" })} ${start.getDate()}`,
+      label: i === 0 ? "This week" : `${i} week ago`,
       total,
       startDate: start.toISOString(),
       endDate: end.toISOString(),
@@ -121,7 +122,7 @@ export async function getWeeklyVolumes(userId: number): Promise<WeeklyVolumeItem
   return result;
 }
 
-export async function getCalendarStats(userId: number): Promise<CalendarStats> {
+export async function getCalendarStats(userId: number) {
   const logs = await prisma.workoutLog.findMany({
     where: { userId },
     select: {
@@ -143,9 +144,7 @@ export async function getCalendarStats(userId: number): Promise<CalendarStats> {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  const monthlyActiveDaysSet = new Set(
-    monthlyLogs.map((log) => toDateKey(log.performedAt)),
-  );
+  const monthlyActiveDaysSet = new Set(monthlyLogs.map((log) => toDateKey(log.performedAt)));
 
   return {
     monthlyActiveDays: monthlyActiveDaysSet.size,
